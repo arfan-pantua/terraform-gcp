@@ -10,11 +10,11 @@ terraform {
 }
 
 provider "google" {
-  project = "${var.project_id}"
-  region  = "${var.region}"
+  project = var.project_id
+  region  = var.region
 }
 
 resource "google_storage_bucket" "bucket" {
   name     = "test-bucket-random-001122-22"
-  location = "${var.region}"
+  location = var.region
 }
