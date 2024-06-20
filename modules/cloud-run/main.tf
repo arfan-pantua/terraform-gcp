@@ -7,7 +7,7 @@ resource "google_cloud_run_service" "default" {
       containers {
         name = "hello"
         ports {
-          container_port = 5050
+          container_port = 8080
         }
         image = var.container_image
         env {
