@@ -16,6 +16,6 @@ variable "gitlab_uri" {
 }
 
 variable "build_location" {
-  type = string
+  type    = string
   default = "asia-southeast1"
 }
