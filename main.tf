@@ -23,7 +23,7 @@ module "cloud-build" {
 
 module "cloud-run" {
   source = "./modules/cloud-run"
-  container_image = "us-docker.pkg.dev/cloudrun/container/hello-job"
+  container_image = "us-docker.pkg.dev/cloudrun/container/hello"
   env_app_name = "app-service-dev-service"
   env_jwt_aud = "app-service-dev"
   env_jwt_expiration = "3600"
