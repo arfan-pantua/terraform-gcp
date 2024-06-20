@@ -23,7 +23,7 @@ module "cloud-build" {
 
 module "cloud-run" {
   source = "./modules/cloud-run"
-  container_image = "asia-southeast1-docker.pkg.dev/msglowid-dev-332604/seller/app.service:2feea56"
+  container_image = "asia-southeast1-docker.pkg.dev/msglowid-dev-332604/seller/app.service@sha256:190a274edeb855f4303435dfdfc72c05dc62fa863922e0b7138d06559ab2c15c"
   env_app_name = "app-service-dev-service"
   env_jwt_aud = "app-service-dev"
   env_jwt_expiration = "3600"
