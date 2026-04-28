@@ -68,8 +68,3 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
-
-      # # 4. Terraform Apply (Only on Push/Merge to develop)
-      # - name: Terraform Apply
-      #   if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-      #   run: terraform apply -auto-approve
