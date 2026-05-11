@@ -7,64 +7,83 @@ terraform {
 
 provider "google" {
   project = "var.project_id"
-  default_labels {
-    labels = var.additional_labels
-  }
+  default_labels = local.additional_labels
 }
 
+module "demo_gke" {
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/gke?ref=v1.0.0"
 
-# Create a Network (VPC)
-resource "google_compute_network" "vpc_network" {
-  name                    = "vpc-network-tf"
-  auto_create_subnetworks = true
-}
-
-# Create a Firewall
-resource "google_compute_firewall" "ssh_rule" {
-  name    = "demo-allow-ssh"
-  network = google_compute_network.vpc_network.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
+  cluster_name = local.cluster_name
+  kubernetes_version = local.kubernetes_version
+  project_id   = var.project_id
+  region       = var.region
+  ip_range_pods = local.ip_range_pods
+  ip_range_services = local.ip_range_services
+  additional_labels = local.additional_labels
   
-  description = "Managed by Terraform: Allow SSH for Ansible"
+  network = google_compute_network.main.name
+  subnetwork = google_compute_subnetwork.main.name
+
+  node_pools = {
+    "monitoring" = {
+      machine_type   = "e2-micro"
+      node_count     = 1
+      labels = {
+        "dedicated" = "monitoring"
+      }
+      taints = [
+        {
+          key    = "dedicated"
+          value  = "monitoring"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+    },
+
+    "general" = {
+      machine_type   = "e2-micro"
+      node_count     = 2
+      spot           = false
+      labels         = {}
+      taints         = []
+    }
+  }
+  
+  access_entries = {
+    power_user = {
+      principal = "user:arfanpantua@gmail.com"
+      role      = "roles/container.admin"
+    }
+  }
 }
 
-resource "google_os_login_ssh_public_key" "ssh_key" {
-  user = "terraform-runner@project-9ab7f4b3-59fb-4c35-846.iam.gserviceaccount.com" # ssh user
-  key  = file("./assets/devops-key.pub")
-} 
-# Create the VM Instance with Labels
-resource "google_compute_instance" "vm_instance" {
-  name         = "demo-node"
-  machine_type = "f1-micro"
-  zone         = "us-central1-a"
+module "grafana_workload_identity" {
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/workload-identity?ref=v1.0.0"
 
-  metadata = {
-    enable-oslogin : "TRUE"
-  }
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-      # You can also label the disk specifically
-      labels = {
-        type = "boot-disk"
-      }
-    }
-  }
+  project_id             = var.project_id
+  namespace              = "grafana"
+  service_account_name   = "grafana-sa"
+  workload_identity_pool = module.demo_gke.workload_identity_pool
 
-  network_interface {
-    network = google_compute_network.vpc_network.name
-    access_config {
-      // Ephemeral public IP
-    }
-  }
+  gcp_roles = [
+    "roles/storage.objectViewer",
+    "roles/pubsub.publisher",
+    "roles/secretmanager.secretAccessor",
+  ]
+}
 
-  # Network tags (used for firewall rules, different from Labels)
-  tags = ["web-node", "ansible-ready"]
+module "loki_workload_identity" {
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/workload-identity?ref=v1.0.0"
 
+  project_id             = var.project_id
+  namespace              = "loki"
+  service_account_name   = "loki-sa"
+  workload_identity_pool = module.demo_gke.workload_identity_pool
+  bucket                 = "loki-data"
+
+  gcp_roles = [
+    "roles/storage.objectViewer",
+    "roles/pubsub.publisher",
+    "roles/secretmanager.secretAccessor",
+  ]
 }
