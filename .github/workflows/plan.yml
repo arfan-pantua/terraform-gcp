@@ -34,7 +34,9 @@ jobs:
         with:
           workload_identity_provider: 'projects/917138085830/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'terraform-runner@project-9ab7f4b3-59fb-4c35-846.iam.gserviceaccount.com'
-
+      - name: Configure Git Credentials
+        run: |
+          git config --global url."https://oauth2:${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}@github.com".insteadOf "https://github.com"
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
