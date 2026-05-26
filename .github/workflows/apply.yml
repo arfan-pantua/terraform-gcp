@@ -1,0 +1,47 @@
+name: 'Terraform Apply'
+
+
+on:
+  pull_request:
+    types:
+      - "closed"
+
+permissions:
+  actions: write
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation
+  issues: write
+  pull-requests: write # Required to post plan comments on the PR
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    
+
+    steps:
+      # 1. Authenticate to GCP using WIF
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/917138085830/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'terraform-runner@project-9ab7f4b3-59fb-4c35-846.iam.gserviceaccount.com'
+      - name: Configure Git Credentials
+        run: |
+          git config --global url."https://oauth2:${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}@github.com".insteadOf "https://github.com"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # --- Setup Terraform / Init steps here ---
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        id: apply
+        # We redirect output to a file and then to stdout for the script to catch
+        run: terraform apply -auto-approve -no-color

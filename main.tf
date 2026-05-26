@@ -11,7 +11,7 @@ provider "google" {
 }
 
 module "demo_gke" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/gke?ref=v1.0.0"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//gke?ref=feature/initiate"
 
   cluster_name = local.cluster_name
   kubernetes_version = local.kubernetes_version
@@ -28,6 +28,8 @@ module "demo_gke" {
     "monitoring" = {
       machine_type   = "e2-micro"
       node_count     = 1
+      disk_size_gb   = 20
+      disk_type      = "pd-standard"
       labels = {
         "dedicated" = "monitoring"
       }
@@ -41,11 +43,12 @@ module "demo_gke" {
     },
 
     "general" = {
-      machine_type   = "e2-micro"
-      node_count     = 2
-      spot           = false
-      labels         = {}
+      machine_type   = "e2-medium"
+      node_count     = 1
+      labels         = { "dedicated" = "common"}
       taints         = []
+      disk_size_gb   = 20
+      disk_type      = "pd-standard"
     }
   }
   
@@ -57,33 +60,34 @@ module "demo_gke" {
   }
 }
 
+module "argocd_workload_identity" {
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
+
+  project_id             = var.project_id
+  namespace              = "argocd"
+  service_account_name   = "argocd-sa"
+  workload_identity_pool = module.demo_gke.workload_identity_pool
+  secret_name            = "gf-password"
+
+}
+
 module "grafana_workload_identity" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/workload-identity?ref=v1.0.0"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
 
   project_id             = var.project_id
   namespace              = "grafana"
   service_account_name   = "grafana-sa"
   workload_identity_pool = module.demo_gke.workload_identity_pool
 
-  gcp_roles = [
-    "roles/storage.objectViewer",
-    "roles/pubsub.publisher",
-    "roles/secretmanager.secretAccessor",
-  ]
 }
 
 module "loki_workload_identity" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//modules/workload-identity?ref=v1.0.0"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
 
   project_id             = var.project_id
   namespace              = "loki"
   service_account_name   = "loki-sa"
   workload_identity_pool = module.demo_gke.workload_identity_pool
-  bucket                 = "loki-data"
+  bucket                 = "arfan-loki-data"
 
-  gcp_roles = [
-    "roles/storage.objectViewer",
-    "roles/pubsub.publisher",
-    "roles/secretmanager.secretAccessor",
-  ]
 }

@@ -10,6 +10,14 @@
 gcloud iam service-accounts create terraform-runner \
     --description="Service account for Terraform to manage infrastructure" \
     --display-name="Terraform Runner"
+
+# You need to grant the Service Account Token Creator role to the identity that is calling the API.
+PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)")
+
+gcloud iam service-accounts add-iam-policy-binding \
+    "terraform-runner@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountTokenCreator" \
+    --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/*"
 ```
 
 ## Create Workload Identity Provider (Github)
@@ -43,4 +51,11 @@ gcloud iam workload-identity-pools providers describe "github-provider" \
   --location="global" \
   --workload-identity-pool="github-actions-pool" \
   --format="value(name)"
+```
+
+# Access to GKE
+```bash
+gcloud container clusters get-credentials <cluster-name> \
+    --region <REGION_or_ZONE> \
+    --project <PROJECT_ID>
 ```
