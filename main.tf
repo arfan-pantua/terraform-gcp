@@ -11,7 +11,7 @@ provider "google" {
 }
 
 module "demo_gke" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//gke?ref=feature/initiate"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//gke?ref=v1.0.0"
 
   cluster_name = local.cluster_name
   kubernetes_version = local.kubernetes_version
@@ -61,7 +61,7 @@ module "demo_gke" {
 }
 
 module "argocd_workload_identity" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=v1.0.0"
 
   project_id             = var.project_id
   namespace              = "argocd"
@@ -72,7 +72,7 @@ module "argocd_workload_identity" {
 }
 
 module "grafana_workload_identity" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=v1.0.0"
 
   project_id             = var.project_id
   namespace              = "grafana"
@@ -82,7 +82,7 @@ module "grafana_workload_identity" {
 }
 
 module "loki_workload_identity" {
-  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=feature/initiate"
+  source = "git::https://github.com/arfan-pantua/terraform-gcp-modules.git//workload-identity?ref=v1.0.0"
 
   project_id             = var.project_id
   namespace              = "loki"
